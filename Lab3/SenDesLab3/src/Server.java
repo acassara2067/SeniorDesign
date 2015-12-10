@@ -76,15 +76,15 @@ public class Server extends JFrame{
 			}
 		}
 		
-//		messengerLock.lock(); // lock game to signal user A's thread
-//		
-//		try{
-//			users[USER_A].setSuspended(false); // resume user A
-//			otherUserConnected.signal(); // wake up user A's thread
-//		}
-//		finally{
-//			messengerLock.unlock(); // unlock game after signalling user A
-//		}
+		messengerLock.lock(); // lock game to signal user A's thread
+		
+		try{
+			users[USER_A].setSuspended(false); // resume user A
+			otherUserConnected.signal(); // wake up user A's thread
+		}
+		finally{
+			messengerLock.unlock(); // unlock game after signalling user A
+		}
 	}
 	
 	private void displayMessage(final String messageToDisplay){
@@ -132,7 +132,7 @@ public class Server extends JFrame{
 			
 				// if user A, wait for another user to arrive
 				if(userNumber == USER_A){
-					output.writeObject("User A connected\nWaiting for another User\n");
+					output.writeObject("Connected: wait for another User\n");
 					output.flush(); // flush output
 					
 					messengerLock.lock(); // lock messenger to wait for second user
@@ -154,7 +154,7 @@ public class Server extends JFrame{
 					output.flush();
 				}
 				else{
-					output.writeObject("User B connected, begin convo\n");
+					output.writeObject("connected: begin convo\n");
 					output.flush();
 				}
 				
@@ -164,6 +164,7 @@ public class Server extends JFrame{
 						Object ob = input.readObject();
 						if(ob.getClass().equals(String.class)){
 							String mesg = ((String) ob).toString();
+							System.out.print("User " + userNumber + ":" + ob +"\n");
 							displayMessage("User " + userNumber + ":" + ob +"\n");
 							if(userNumber == 0){
 								users[1].output.writeObject(ob);
