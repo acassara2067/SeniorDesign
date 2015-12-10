@@ -7,4 +7,7 @@ public class ServerTest {
 		application.execute();
 	}
 
+	
+	// when clients disconnect, server is displaying that they have connected
+	// could be something to do with locks? or runnables?
 }
