@@ -165,8 +165,14 @@ public class Server extends JFrame{
 						if(ob.getClass().equals(String.class)){
 							String mesg = ((String) ob).toString();
 							displayMessage("User " + userNumber + ":" + ob);
-							output.writeObject(ob);
-							output.flush();
+							if(userNumber == 0){
+								users[1].output.writeObject(ob);
+								users[1].output.flush();
+							}
+							else if(userNumber == 1){
+								users[0].output.writeObject(ob);
+								users[0].output.flush();
+							}
 						}
 					}
 					catch(ClassNotFoundException e){
