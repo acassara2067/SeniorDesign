@@ -27,27 +27,34 @@ public class Client extends JFrame implements Runnable{
 	private Socket connection; // connection to server
 	private ObjectInputStream input; // input from server
 	private ObjectOutputStream output;
-	
-	private JTextArea displayArea;
+	private final int port = 23555; 
+	private JTextArea displayArea; // textfield to display conversation
 	private JPanel userActionPanel;
 	private JTextField messageField;
 	private JButton send;
 	
 	public Client(String host){
 		super("Messenger Client");
-		clientHost = host;
+		clientHost = host; // set name of server
 		
 		//Create GUI
+		setSize(300, 300);
+		setVisible(true);
 		displayArea = new JTextArea();
 		displayArea.setEditable(false);
 		displayArea.setVisible(true);
-		add(new JScrollPane(displayArea));
+		displayArea.setText("This is where conversation is displayed\n");
+		add(new JScrollPane(displayArea), BorderLayout.CENTER);
+		
 		
 		userActionPanel = new JPanel();
+		userActionPanel.setLayout(new BorderLayout());
 		userActionPanel.setVisible(true);
 		add(userActionPanel, BorderLayout.SOUTH);
 		
 		messageField = new JTextField();
+		messageField.setEditable(true);
+		messageField.setText("Type Message Here");
 		messageField.setVisible(true);
 		userActionPanel.add(messageField);
 		
@@ -68,21 +75,26 @@ public class Client extends JFrame implements Runnable{
 	
 	// start the client thread
 	public void startClient(){
-		// connect to server and get streams
 		try{
-			//make connection to server
-			connection = new Socket(
-				InetAddress.getByName(clientHost), 12345);
+			connectToServer();
+			getStreams();
+			handleConnection();
+		}catch(Exception e){
 			
-			// get streams for input and output
-			input = new ObjectInputStream(connection.getInputStream());
-			output = new ObjectOutputStream(connection.getOutputStream());	
+		}finally{
+			closeConnection();
 		}
-		catch(IOException ioException){
-			ioException.printStackTrace();
-		}
+	}
+	public void connectToServer() throws IOException{
+		InetAddress ipAddress = InetAddress.getByName(clientHost);
+		connection = new Socket(ipAddress,port);
+	}
+	public void getStreams()throws IOException{
+		input = new ObjectInputStream(connection.getInputStream());
+		output = new ObjectOutputStream(connection.getOutputStream());
 		
-		// create and start worker thread for this client
+	}
+	public void handleConnection(){
 		ExecutorService worker = Executors.newFixedThreadPool(1);
 		worker.execute(this); // execute client
 	}
@@ -96,14 +108,16 @@ public class Client extends JFrame implements Runnable{
 				Object ob = input.readObject();
 				// if there is input data from the server
 				if(ob.getClass().equals(String.class)){
-					processMessageDecryption(((Scanner) ob).nextLine());
+					processMessageDecryption(((String) ob).toString());
 				}
 				
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}		
+			} catch(NullPointerException e){
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -119,8 +133,9 @@ public class Client extends JFrame implements Runnable{
 		try {
 			output.writeObject(message);
 			output.flush();
+			displayMessage("ME: " + message+"/n");
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -130,7 +145,7 @@ public class Client extends JFrame implements Runnable{
 		// TO DO: DECRYPTION
 		
 		//display decrypted message
-		displayMessage(message + "\n");
+		displayMessage("Other Client: " + message + "\n");
 	}
 	
 	/**
@@ -145,5 +160,14 @@ public class Client extends JFrame implements Runnable{
 				}
 			}
 		);
+	}
+	private void closeConnection(){
+		try{
+			output.close();
+			input.close();
+			connection.close();
+		}catch(IOException io){
+			
+		}
 	}
 }
