@@ -20,7 +20,7 @@ public class Client extends JFrame implements Runnable{
 	private Socket connection; // connection to server
 	private ObjectInputStream input; // input from server
 	private ObjectOutputStream output;
-	private final int port = 23555; 
+	private final int port = 23557; 
 	private JTextArea displayArea; // textfield to display conversation
 	private JTextField messageField;
 	
@@ -49,7 +49,7 @@ public class Client extends JFrame implements Runnable{
 		}catch(Exception e){
 			
 		}finally{
-			closeConnection();
+			//closeConnection();
 		}
 	}
 	public void connectToServer() throws IOException{
@@ -79,11 +79,11 @@ public class Client extends JFrame implements Runnable{
 				}
 				
 			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			//	e.printStackTrace();
 			} catch (IOException e) {
-				e.printStackTrace();
+			//	e.printStackTrace();
 			} catch(NullPointerException e){
-				e.printStackTrace();
+			//	e.printStackTrace();
 			}
 		}
 	}
@@ -97,11 +97,14 @@ public class Client extends JFrame implements Runnable{
 	}
 	
 	private void sendMessage(String message){
+		System.out.print("trying to send: " + message + "\n");
 		try {
 			output.writeObject(message);
 			output.flush();
-			displayMessage("ME: " + message+"/n");
+			System.out.print("send successful");
 		} catch (Exception e) {
+			System.out.print("send unsuccessful\nerror: " + e);
+
 			//e.printStackTrace();
 		}
 	}
@@ -146,6 +149,7 @@ public class Client extends JFrame implements Runnable{
 			
 			if(e.getKeyCode() == KeyEvent.VK_ENTER){
 				processMessageEncryption(messageField.getText());
+				displayMessage("ME: " + messageField.getText() +"\n");
 			}
 		}
 

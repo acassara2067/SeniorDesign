@@ -22,7 +22,7 @@ public class Server extends JFrame{
 	private int currentUser;
 	private final static int USER_A = 0; // constant for the first user
 	private final static int USER_B = 1; // constant for the second user
-	private final int PORT = 23555;
+	private final int PORT = 23557;
 	private ServerSocket server; // server socket to connect with clients
 	private ExecutorService runMessenger; // will run Users
 //	private Lock messengerLock; // to lock game for synchronization
@@ -66,12 +66,12 @@ public class Server extends JFrame{
 
 			try{// wait for connection, create Client, start Runnable
 				users[i] = new User(server.accept(), i);
-				displayMessage("hi\n");
-				System.out.println("by");
+				displayMessage("User " + i + " connected \n");
+				System.out.println("User " + i + " connected \n");
 				runMessenger.execute(users[i]);		// execute player runnable
 			}
 			catch(IOException ioException){
-				ioException.printStackTrace();
+				//ioException.printStackTrace();
 				//System.exit(1);
 			}
 		}
@@ -100,8 +100,8 @@ public class Server extends JFrame{
 	// private inner class User manages each User as a runnable
 	private class User implements Runnable{
 		private Socket connection; //connection to client
-		private ObjectInputStream input;
-		private ObjectOutputStream output;
+		private ObjectInputStream input; // input from client
+		private ObjectOutputStream output; // output to client
 		private int userNumber; // tracks which user this is
 		private boolean suspended = true; // whether thread is suspended
 		
@@ -113,21 +113,19 @@ public class Server extends JFrame{
 			connection = socket; // store socket for client
 			
 			try {
-				displayMessage("try creating streams for User " + userNumber + "\n");
-				System.out.print("try creating streams for User " + userNumber + "\n");
-				input = new ObjectInputStream(connection.getInputStream());
 				output = new ObjectOutputStream(connection.getOutputStream());
-				displayMessage("User " + number + " streams created\n");
-				System.out.print("User " + number + " streams created\n");
-			} catch (IOException e) {
-				e.printStackTrace();
+				input = new ObjectInputStream(connection.getInputStream());		
+			} catch (Exception e) {
+				//e.printStackTrace();
+				//System.exit(1);
+				//System.err.println("\nError at connect streams: " + e + "\n");
 			}
 		}		
 
 		// control thread's execution
 		@Override
 		public void run() {
-			displayMessage("Enter run() for User " + userNumber);
+			displayMessage("Enter run() for User " + userNumber + "\n");
 			System.out.println("Enter run() for User " + userNumber);
 			try{
 				displayMessage("User " + userNumber + " connected\n");
@@ -166,30 +164,30 @@ public class Server extends JFrame{
 						Object ob = input.readObject();
 						if(ob.getClass().equals(String.class)){
 							String mesg = ((String) ob).toString();
-							displayMessage("\nmessage: " + ob);
+							displayMessage("User " + userNumber + ":" + ob);
 							output.writeObject(ob);
 							output.flush();
 						}
 					}
 					catch(ClassNotFoundException e){
-						e.printStackTrace();
+					//	e.printStackTrace();
 					}
 					catch(IOException e){
-						e.printStackTrace();
+					//	e.printStackTrace();
 					}
 					finally{
 						try{
 							connection.close();
 						}
 						catch(IOException e){
-							e.printStackTrace();
+						//	e.printStackTrace();
 						}
 					}
 				}
 			}
 			catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+			//		e.printStackTrace();
 			}
 		}
 		
