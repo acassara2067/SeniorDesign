@@ -6,9 +6,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+//import java.util.concurrent.locks.Condition;
+//import java.util.concurrent.locks.Lock;
+//import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -25,15 +25,15 @@ public class Server extends JFrame{
 	private final int PORT = 23557;
 	private ServerSocket server; // server socket to connect with clients
 	private ExecutorService runMessenger; // will run Users
-	private Lock messengerLock; // to lock game for synchronization
-	private Condition otherUserConnected; // to wait for other user's turn
+	//private Lock messengerLock; // to lock game for synchronization
+	//private Condition otherUserConnected; // to wait for other user's turn
 	
 	public Server(){
 		super("Messaging Server");
 		// create ExecutorService with a thread for each client
 		runMessenger = Executors.newFixedThreadPool(2);
-		messengerLock = new ReentrantLock();	// create lock for messenger
-		otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
+		//messengerLock = new ReentrantLock();	// create lock for messenger
+		//otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
 
 		users = new User[2];
 		currentUser = USER_A;
@@ -76,15 +76,15 @@ public class Server extends JFrame{
 			}
 		}
 		
-		messengerLock.lock(); // lock game to signal user A's thread
-		
-		try{
-			users[USER_A].setSuspended(false); // resume user A
-			otherUserConnected.signal(); // wake up user A's thread
-		}
-		finally{
-			messengerLock.unlock(); // unlock game after signalling user A
-		}
+//		messengerLock.lock(); // lock game to signal user A's thread
+//		
+//		try{
+//			users[USER_A].setSuspended(false); // resume user A
+//			otherUserConnected.signal(); // wake up user A's thread
+//		}
+//		finally{
+//			messengerLock.unlock(); // unlock game after signalling user A
+//		}
 	}
 	
 	private void displayMessage(final String messageToDisplay){
@@ -135,23 +135,23 @@ public class Server extends JFrame{
 					output.writeObject("Connected: wait for another User\n");
 					output.flush(); // flush output
 					
-					messengerLock.lock(); // lock messenger to wait for second user
-					
-					try{
-						while(suspended){
-							otherUserConnected.await(); // wait for user B
-						}
-					}
-					catch(InterruptedException e){
-						e.printStackTrace();
-					}
-					finally{
-						messengerLock.unlock(); // unlock messenger after second user
-					}
-					
-					// send message that the other user connected
-					output.writeObject("Other user connected. Begin conversation");
-					output.flush();
+//					messengerLock.lock(); // lock messenger to wait for second user
+//					
+//					try{
+//						while(suspended){
+//							otherUserConnected.await(); // wait for user B
+//						}
+//					}
+//					catch(InterruptedException e){
+//						e.printStackTrace();
+//					}
+//					finally{
+//						messengerLock.unlock(); // unlock messenger after second user
+//					}
+//					
+//					// send message that the other user connected
+//					output.writeObject("Other user connected. Begin conversation");
+//					output.flush();
 				}
 				else{
 					output.writeObject("connected: begin convo\n");
@@ -164,8 +164,8 @@ public class Server extends JFrame{
 						Object ob = input.readObject();
 						if(ob.getClass().equals(String.class)){
 							String mesg = ((String) ob).toString();
-							System.out.print("User " + userNumber + ":" + ob +"\n");
-							displayMessage("User " + userNumber + ":" + ob +"\n");
+							System.out.print("User " + userNumber + ":" + mesg +"\n");
+							displayMessage("User " + userNumber + ":" + mesg +"\n");
 							if(userNumber == 0){
 								users[1].output.writeObject(ob);
 								users[1].output.flush();
@@ -182,14 +182,14 @@ public class Server extends JFrame{
 					catch(IOException e){
 					//	e.printStackTrace();
 					}
-					finally{
-						try{
-							connection.close();
-						}
-						catch(IOException e){
-						//	e.printStackTrace();
-						}
-					}
+//					finally{
+//						try{
+//							connection.close();
+//						}
+//						catch(IOException e){
+//						//	e.printStackTrace();
+//						}
+//					}
 				}
 			}
 			catch (IOException e) {

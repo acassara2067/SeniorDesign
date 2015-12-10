@@ -101,7 +101,8 @@ public class Client extends JFrame implements Runnable{
 		try {
 			output.writeObject(message);
 			output.flush();
-			System.out.print("send successful");
+			displayMessage("ME: " + messageField.getText() +"\n");
+			System.out.print("send to server successful");
 		} catch (Exception e) {
 			System.out.print("send unsuccessful\nerror: " + e);
 
@@ -149,7 +150,6 @@ public class Client extends JFrame implements Runnable{
 			
 			if(e.getKeyCode() == KeyEvent.VK_ENTER){
 				processMessageEncryption(messageField.getText());
-				displayMessage("ME: " + messageField.getText() +"\n");
 			}
 		}
 
