@@ -25,15 +25,15 @@ public class Server extends JFrame{
 	private final int PORT = 23557;
 	private ServerSocket server; // server socket to connect with clients
 	private ExecutorService runMessenger; // will run Users
-//	private Lock messengerLock; // to lock game for synchronization
-//	private Condition otherUserConnected; // to wait for other user's turn
+	private Lock messengerLock; // to lock game for synchronization
+	private Condition otherUserConnected; // to wait for other user's turn
 	
 	public Server(){
 		super("Messaging Server");
 		// create ExecutorService with a thread for each client
 		runMessenger = Executors.newFixedThreadPool(2);
-		//messengerLock = new ReentrantLock();	// create lock for messenger
-		//otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
+		messengerLock = new ReentrantLock();	// create lock for messenger
+		otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
 
 		users = new User[2];
 		currentUser = USER_A;
@@ -66,8 +66,8 @@ public class Server extends JFrame{
 
 			try{// wait for connection, create Client, start Runnable
 				users[i] = new User(server.accept(), i);
-				displayMessage("User " + i + " connected \n");
-				System.out.println("User " + i + " connected \n");
+				//displayMessage("User " + i + " connected \n");
+				//System.out.println("User " + i + " connected \n");
 				runMessenger.execute(users[i]);		// execute player runnable
 			}
 			catch(IOException ioException){
@@ -107,8 +107,8 @@ public class Server extends JFrame{
 		
 		// set up User thread
 		public User(Socket socket, int number){
-			displayMessage("User " + number + " instantiated\n");
-			System.out.print("User " + number + " instantiated\n");
+			//displayMessage("User " + number + " instantiated\n");
+			//System.out.print("User " + number + " instantiated\n");
 			userNumber = number; // store this user's number
 			connection = socket; // store socket for client
 			
@@ -125,8 +125,8 @@ public class Server extends JFrame{
 		// control thread's execution
 		@Override
 		public void run() {
-			displayMessage("Enter run() for User " + userNumber + "\n");
-			System.out.println("Enter run() for User " + userNumber);
+			//displayMessage("Enter run() for User " + userNumber + "\n");
+			//System.out.println("Enter run() for User " + userNumber);
 			try{
 				displayMessage("User " + userNumber + " connected\n");
 			
@@ -135,23 +135,23 @@ public class Server extends JFrame{
 					output.writeObject("User A connected\nWaiting for another User\n");
 					output.flush(); // flush output
 					
-//					messengerLock.lock(); // lock messenger to wait for second user
-//					
-//					try{
-//						while(suspended){
-//							otherUserConnected.await(); // wait for user B
-//						}
-//					}
-//					catch(InterruptedException e){
-//						e.printStackTrace();
-//					}
-//					finally{
-//						messengerLock.unlock(); // unlock messenger after second user
-//					}
-//					
-//					// send message that the other user connected
-//					output.writeObject("Other user connected. Begin conversation");
-//					output.flush();
+					messengerLock.lock(); // lock messenger to wait for second user
+					
+					try{
+						while(suspended){
+							otherUserConnected.await(); // wait for user B
+						}
+					}
+					catch(InterruptedException e){
+						e.printStackTrace();
+					}
+					finally{
+						messengerLock.unlock(); // unlock messenger after second user
+					}
+					
+					// send message that the other user connected
+					output.writeObject("Other user connected. Begin conversation");
+					output.flush();
 				}
 				else{
 					output.writeObject("User B connected, begin convo\n");
@@ -164,7 +164,7 @@ public class Server extends JFrame{
 						Object ob = input.readObject();
 						if(ob.getClass().equals(String.class)){
 							String mesg = ((String) ob).toString();
-							displayMessage("User " + userNumber + ":" + ob);
+							displayMessage("User " + userNumber + ":" + ob +"\n");
 							if(userNumber == 0){
 								users[1].output.writeObject(ob);
 								users[1].output.flush();
