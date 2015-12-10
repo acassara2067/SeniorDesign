@@ -61,7 +61,9 @@ public class Client extends JFrame implements Runnable{
 		ActionListener sendMessageHandler = new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e){
-				processMessageEncryption(messageField.getText());
+				if(messageField.getText() != ""){
+					processMessageEncryption(messageField.getText());
+				}
 			}
 		};
 		
@@ -134,7 +136,7 @@ public class Client extends JFrame implements Runnable{
 			output.writeObject(message);
 			output.flush();
 			displayMessage("ME: " + message+"/n");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			//e.printStackTrace();
 		}
 	}
