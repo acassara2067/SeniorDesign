@@ -8,7 +8,7 @@ public class Driver {
 
 	public static void main(String[] args) {
 		
-		Chat myEnd = new Chat("Gavin", "Ross");
+		Chat myEnd = new Chat("Gavin", "Ross"); // chat for each person
 		Chat theirEnd = new Chat("Ross", "Gavin");
 		
 		PrivateKey rossPrivateKey = theirEnd.generateMyKeys();

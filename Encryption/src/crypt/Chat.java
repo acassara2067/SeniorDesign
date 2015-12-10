@@ -12,7 +12,7 @@ public class Chat { // chat class
 	
 	private static final String ALGORITHM = "RSA";
 	
-	private String myName;
+	private String myName; // my name
 	
 	private String partnersName;
 	
