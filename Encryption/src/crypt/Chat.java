@@ -8,7 +8,7 @@ import java.security.PublicKey;
 
 import javax.crypto.Cipher;
 
-public class Chat {
+public class Chat { // chat class
 	
 	private static final String ALGORITHM = "RSA";
 	
