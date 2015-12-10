@@ -2,7 +2,6 @@ import java.awt.BorderLayout;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -18,14 +17,12 @@ import javax.swing.SwingUtilities;
 
 public class Server extends JFrame{
 	private static final long serialVersionUID = 1226255923201518073L;
-	
 	private JTextArea textDisplayArea; // output the flow of messages from one user to the other
-	
 	private User[] users; // array of Users
+	private int currentUser;
 	private final static int USER_A = 0; // constant for the first user
 	private final static int USER_B = 1; // constant for the second user
-
-	
+	private final int PORT = 23555;
 	private ServerSocket server; // server socket to connect with clients
 	private ExecutorService runMessenger; // will run Users
 	private Lock messengerLock; // to lock game for synchronization
@@ -36,10 +33,12 @@ public class Server extends JFrame{
 		// create ExecutorService with a thread for each client
 		runMessenger = Executors.newFixedThreadPool(2);
 		messengerLock = new ReentrantLock();	// create lock for messenger
-		
-		// condition variable for both clients being connected
-		otherUserConnected = messengerLock.newCondition();
-		
+		otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
+
+		users = new User[2];
+		currentUser = USER_A;
+	
+		// create GUI
 		textDisplayArea = new JTextArea();
 		textDisplayArea.setEditable(false);
 		textDisplayArea.setText("Server awaiting connections\n");
@@ -48,7 +47,7 @@ public class Server extends JFrame{
 		setVisible(true);
 		
 		try{
-			server = new ServerSocket(12345, 2);
+			server = new ServerSocket(PORT, 2);
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -57,15 +56,17 @@ public class Server extends JFrame{
 	}
 	
 	public void execute(){
+		//server = new ServerSocket(PORT, 2);
 		// wait for both clients to connect
-		for(int i = 0; i < 2; i++){
+		for(int i = 0; i < users.length; i++){
 			try{// wait for connection, create Client, start Runnable
 				users[i] = new User(server.accept(), i);
-				runMessenger.execute(users[i]);
+				
+				runMessenger.execute(users[i]);		// execute player runnable
 			}
 			catch(IOException ioException){
 				ioException.printStackTrace();
-				System.exit(1);
+				//System.exit(1);
 			}
 		}
 		
@@ -109,8 +110,7 @@ public class Server extends JFrame{
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
-		
+		}		
 
 		// control thread's execution
 		@Override
@@ -142,8 +142,35 @@ public class Server extends JFrame{
 					output.flush();
 				}
 				else{
-					output.writeObject("User B connected");
+					output.writeObject("User B connected, please wait\n");
 					output.flush();
+				}
+				
+				// while messenger application is still running
+				while(true){
+					try{
+						Object ob = input.readObject();
+						if(ob.getClass().equals(String.class)){
+							String mesg = ((String) ob).toString();
+							displayMessage("\nmessage: " + ob);
+							output.writeObject(ob);
+							output.flush();
+						}
+					}
+					catch(ClassNotFoundException e){
+						e.printStackTrace();
+					}
+					catch(IOException e){
+						e.printStackTrace();
+					}
+					finally{
+						try{
+							connection.close();
+						}
+						catch(IOException e){
+							e.printStackTrace();
+						}
+					}
 				}
 			}
 			catch (IOException e) {
