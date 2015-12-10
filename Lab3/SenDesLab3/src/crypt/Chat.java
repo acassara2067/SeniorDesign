@@ -6,6 +6,8 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
+// created on both clients end and creates key pair for each client
+
 import javax.crypto.Cipher;
 
 public class Chat { // chat class
@@ -33,7 +35,7 @@ public class Chat { // chat class
 	public String getPartnersName() {return partnersName;}
 	public void setPartnersName(String partnersName) {this.partnersName = partnersName;}
 
-	public PrivateKey generateMyKeys(){
+	public PublicKey generateMyKeys(){
 		
 		KeyPairGenerator keyGen;
 		try {
@@ -42,9 +44,9 @@ public class Chat { // chat class
 			keyGen.initialize(1024);
 			final KeyPair key = keyGen.generateKeyPair();
 			      
-			encryptionKey = key.getPublic();
+			decryptionKey = key.getPrivate();
 			
-			return key.getPrivate();
+			return key.getPublic();
 			
 		} catch (GeneralSecurityException e) {
 			// TODO Auto-generated catch block
@@ -54,8 +56,8 @@ public class Chat { // chat class
 		return null;
 	}
 	
-	public void setDecryptionKey(PrivateKey priv) throws GeneralSecurityException {
-	    decryptionKey = priv;
+	public void setEncryptionKey(PublicKey priv) throws GeneralSecurityException {
+	    encryptionKey = priv;
 	}
 	
 	public byte[] encrypt(String message){

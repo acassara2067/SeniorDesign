@@ -2,6 +2,7 @@ package crypt;
 
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 
 // test class
 public class Driver {
@@ -11,12 +12,12 @@ public class Driver {
 		Chat myEnd = new Chat("Gavin", "Ross"); // chat for each person
 		Chat theirEnd = new Chat("Ross", "Gavin");
 		
-		PrivateKey rossPrivateKey = theirEnd.generateMyKeys();
-		PrivateKey myPrivateKey = myEnd.generateMyKeys();
+		PublicKey rossPrivateKey = theirEnd.generateMyKeys();
+		PublicKey myPrivateKey = myEnd.generateMyKeys();
 		
 		try {
-			myEnd.setDecryptionKey(rossPrivateKey);
-			theirEnd.setDecryptionKey(myPrivateKey);
+			myEnd.setEncryptionKey(rossPrivateKey);
+			theirEnd.setEncryptionKey(myPrivateKey);
 		} catch (GeneralSecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -97,15 +97,16 @@ public class Client extends JFrame implements Runnable{
 	}
 	
 	private void sendMessage(String message){
-		System.out.print("trying to send: " + message + "\n");
 		try {
 			output.writeObject(message);
 			output.flush();
 			displayMessage("ME: " + messageField.getText() +"\n");
-			System.out.print("send to server successful");
+			messageField.setText("");
+			//System.out.print("send to server successful");
 		} catch (Exception e) {
+			displayMessage("");
 			System.out.print("send unsuccessful\nerror: " + e);
-
+			
 			//e.printStackTrace();
 		}
 	}
@@ -116,7 +117,7 @@ public class Client extends JFrame implements Runnable{
 		// TO DO: DECRYPTION
 		
 		//display decrypted message
-		displayMessage("Other Client: " + message + "\n");
+		displayMessage(message + "\n");
 	}
 	
 	/**
