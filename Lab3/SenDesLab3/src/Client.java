@@ -1,15 +1,13 @@
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Formatter;
-import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,50 +27,22 @@ public class Client extends JFrame implements Runnable{
 	private ObjectOutputStream output;
 	private final int port = 23555; 
 	private JTextArea displayArea; // textfield to display conversation
-	private JPanel userActionPanel;
 	private JTextField messageField;
-	private JButton send;
 	
 	public Client(String host){
 		super("Messenger Client");
 		clientHost = host; // set name of server
 		
-		//Create GUI
-		setSize(300, 300);
-		setVisible(true);
+		messageField = new JTextField("Enter message here.");
+		messageField.setEditable(true);
+		messageField.addKeyListener(new MyKeyListener());
+		add(messageField, BorderLayout.SOUTH);
+		
 		displayArea = new JTextArea();
-		displayArea.setEditable(false);
-		displayArea.setVisible(true);
-		displayArea.setText("This is where conversation is displayed\n");
 		add(new JScrollPane(displayArea), BorderLayout.CENTER);
 		
-		
-		userActionPanel = new JPanel();
-		userActionPanel.setLayout(new BorderLayout());
-		userActionPanel.setVisible(true);
-		add(userActionPanel, BorderLayout.SOUTH);
-		
-		messageField = new JTextField();
-		messageField.setEditable(true);
-		messageField.setText("Type Message Here");
-		messageField.setVisible(true);
-		userActionPanel.add(messageField);
-		
-		ActionListener sendMessageHandler = new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e){
-				if(messageField.getText() != ""){
-					processMessageEncryption(messageField.getText());
-				}
-			}
-		};
-		
-		send = new JButton("Send");
-		send.addActionListener(sendMessageHandler);
-		send.setVisible(true);
-		userActionPanel.add(send, BorderLayout.EAST);
-		
-		startClient();
+		setSize(450,200);
+		setVisible(true);
 	}
 	
 	// start the client thread
@@ -171,5 +141,24 @@ public class Client extends JFrame implements Runnable{
 		}catch(IOException io){
 			
 		}
+	}
+	
+	private class MyKeyListener implements KeyListener {
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			
+			
+			if(e.getKeyCode() == KeyEvent.VK_ENTER){
+				processMessageEncryption(messageField.getText());
+			}
+		}
+
+		@Override
+		public void keyReleased(KeyEvent arg0) {}
+
+		@Override
+		public void keyTyped(KeyEvent arg0) {}
+		
 	}
 }

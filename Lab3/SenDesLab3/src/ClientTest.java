@@ -10,6 +10,7 @@ public class ClientTest {
 			application = new Client(args[0]); // use args
 
 		application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		application.startClient();
 	}
 
 }

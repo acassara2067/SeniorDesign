@@ -6,3 +6,5 @@
 /Server$User.class
 /Server.class
 /ServerTest.class
+/Client$MyKeyListener.class
+/crypt/
