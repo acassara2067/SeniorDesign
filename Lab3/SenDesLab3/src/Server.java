@@ -25,15 +25,15 @@ public class Server extends JFrame{
 	private final int PORT = 23555;
 	private ServerSocket server; // server socket to connect with clients
 	private ExecutorService runMessenger; // will run Users
-	private Lock messengerLock; // to lock game for synchronization
-	private Condition otherUserConnected; // to wait for other user's turn
+//	private Lock messengerLock; // to lock game for synchronization
+//	private Condition otherUserConnected; // to wait for other user's turn
 	
 	public Server(){
 		super("Messaging Server");
 		// create ExecutorService with a thread for each client
 		runMessenger = Executors.newFixedThreadPool(2);
-		messengerLock = new ReentrantLock();	// create lock for messenger
-		otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
+		//messengerLock = new ReentrantLock();	// create lock for messenger
+		//otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
 
 		users = new User[2];
 		currentUser = USER_A;
@@ -41,13 +41,15 @@ public class Server extends JFrame{
 		// create GUI
 		textDisplayArea = new JTextArea();
 		textDisplayArea.setEditable(false);
-		textDisplayArea.setText("Server awaiting connections\n");
+		//textDisplayArea.setText("Server awaiting connections\n");
 		add(new JScrollPane( textDisplayArea ), BorderLayout.CENTER);
 		setSize(500,500);
 		setVisible(true);
 		
 		try{
 			server = new ServerSocket(PORT, 2);
+			displayMessage("Server awaiting connections\n");
+			System.out.print("Server waiting connections\n");
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -56,12 +58,16 @@ public class Server extends JFrame{
 	}
 	
 	public void execute(){
-		//server = new ServerSocket(PORT, 2);
 		// wait for both clients to connect
+		
 		for(int i = 0; i < users.length; i++){
+			displayMessage("waiting for user " + i + "\n");
+			System.out.print("waiting for user " + i + "\n");
+
 			try{// wait for connection, create Client, start Runnable
 				users[i] = new User(server.accept(), i);
-				
+				displayMessage("hi\n");
+				System.out.println("by");
 				runMessenger.execute(users[i]);		// execute player runnable
 			}
 			catch(IOException ioException){
@@ -70,15 +76,15 @@ public class Server extends JFrame{
 			}
 		}
 		
-		messengerLock.lock(); // lock game to signal user A's thread
-		
-		try{
-			users[USER_A].setSuspended(false); // resume user A
-			otherUserConnected.signal(); // wake up user A's thread
-		}
-		finally{
-			messengerLock.unlock(); // unlock game after signalling user A
-		}
+//		messengerLock.lock(); // lock game to signal user A's thread
+//		
+//		try{
+//			users[USER_A].setSuspended(false); // resume user A
+//			otherUserConnected.signal(); // wake up user A's thread
+//		}
+//		finally{
+//			messengerLock.unlock(); // unlock game after signalling user A
+//		}
 	}
 	
 	private void displayMessage(final String messageToDisplay){
@@ -91,7 +97,7 @@ public class Server extends JFrame{
 		);
 	}
 	
-	// privet inner class User manages each User as a runnable
+	// private inner class User manages each User as a runnable
 	private class User implements Runnable{
 		private Socket connection; //connection to client
 		private ObjectInputStream input;
@@ -101,12 +107,18 @@ public class Server extends JFrame{
 		
 		// set up User thread
 		public User(Socket socket, int number){
+			displayMessage("User " + number + " instantiated\n");
+			System.out.print("User " + number + " instantiated\n");
 			userNumber = number; // store this user's number
 			connection = socket; // store socket for client
 			
 			try {
+				displayMessage("try creating streams for User " + userNumber + "\n");
+				System.out.print("try creating streams for User " + userNumber + "\n");
 				input = new ObjectInputStream(connection.getInputStream());
 				output = new ObjectOutputStream(connection.getOutputStream());
+				displayMessage("User " + number + " streams created\n");
+				System.out.print("User " + number + " streams created\n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -115,6 +127,8 @@ public class Server extends JFrame{
 		// control thread's execution
 		@Override
 		public void run() {
+			displayMessage("Enter run() for User " + userNumber);
+			System.out.println("Enter run() for User " + userNumber);
 			try{
 				displayMessage("User " + userNumber + " connected\n");
 			
@@ -123,26 +137,26 @@ public class Server extends JFrame{
 					output.writeObject("User A connected\nWaiting for another User\n");
 					output.flush(); // flush output
 					
-					messengerLock.lock(); // lock messenger to wait for second user
-					
-					try{
-						while(suspended){
-							otherUserConnected.await(); // wait for user B
-						}
-					}
-					catch(InterruptedException e){
-						e.printStackTrace();
-					}
-					finally{
-						messengerLock.unlock(); // unlock messenger after second user
-					}
-					
-					// send message that the other user connected
-					output.writeObject("Other user connected. Begin conversation");
-					output.flush();
+//					messengerLock.lock(); // lock messenger to wait for second user
+//					
+//					try{
+//						while(suspended){
+//							otherUserConnected.await(); // wait for user B
+//						}
+//					}
+//					catch(InterruptedException e){
+//						e.printStackTrace();
+//					}
+//					finally{
+//						messengerLock.unlock(); // unlock messenger after second user
+//					}
+//					
+//					// send message that the other user connected
+//					output.writeObject("Other user connected. Begin conversation");
+//					output.flush();
 				}
 				else{
-					output.writeObject("User B connected, please wait\n");
+					output.writeObject("User B connected, begin convo\n");
 					output.flush();
 				}
 				
