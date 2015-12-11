@@ -6,8 +6,4 @@ public class ServerTest {
 		application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		application.execute();
 	}
-
-	
-	// when clients disconnect, server is displaying that they have connected
-	// could be something to do with locks? or runnables?
 }

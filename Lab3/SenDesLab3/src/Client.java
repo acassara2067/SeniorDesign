@@ -7,7 +7,6 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,7 +72,6 @@ public class Client extends JFrame implements Runnable{
 	public void handleConnection(){
 		
 		cryption = new Cryption(); //generate keySet for user
-		displayMessage("Cryprion created\nRunning client thread\n");
 		ExecutorService worker = Executors.newFixedThreadPool(1);
 		worker.execute(this); // execute client
 	}
@@ -81,96 +79,71 @@ public class Client extends JFrame implements Runnable{
 	// control thread that allows continuous update of displayArea
 	@Override
 	public void run() {
-		//displayMessage("my public key: " + cryption.getPublicKey().toString() + "\n");
-		//displayMessage("my private key: " + cryption.getPrivateKey().toString() + "\n");
-		//displayMessage("Trying to send key:\n");
+		//Send public key
 		try {
 			output.writeObject(cryption.getPublicKey());
 			output.flush();
-			displayMessage("\tsent public key: " + cryption.getPublicKey() + "\n");
 		} catch (IOException e1) {
-			displayMessage("public key NOT sent\n");
 		}
-		//displayMessage("Done trying\n");
-
 		
 		// continually keep the connection open and read messages from the server
 		while(true){
 			try {
-				Object ob = input.readObject();
 				// if there is input data from the server
+				Object ob = input.readObject();
+				
+				//input is class String
 				if(ob.getClass().equals(String.class)){
-					processMessageDecryption(((String) ob).toString());
+					displayMessage(((String) ob).toString() + "\n");
 				}
-				else if(ob.getClass().equals(Byte[].class)){
-					
+				else if(ob instanceof byte[]){
+					processMessageDecryption((byte[]) ob);
 				}
 				else if(ob instanceof PublicKey){
 					try {
 						cryption.setEncryptionKey((PublicKey)ob);
-						displayMessage("got others public key: " + cryption.getEncryptionKey());
-
-					} catch (GeneralSecurityException e) {
+					} 
+					catch (GeneralSecurityException e) {
 
 					}
 				}
-//				else if(ob.getClass().equals(boolean.class)){
-//					displayMessage("frog");
-//					if((boolean)ob.equals(false)){
-//						handler.deactivate();
-//					}
-//					else if((boolean)ob.equals(true)){
-//						handler.activate();
-//					}
-//					if((boolean)ob.equals(true)){
-//						displayMessage("Server need pub key");
-//					}
-//					else{
-//						displayMessage("wut");
-//					}
-//				}
-				
-			} catch (ClassNotFoundException e) {
-			//	e.printStackTrace();
-			} catch (IOException e) {
-			//	e.printStackTrace();
-			} catch(NullPointerException e){
-			//	e.printStackTrace();
+				else{
+					displayMessage("err: " +ob.toString());
+				}				
+			} 
+			catch (ClassNotFoundException e) {
+
+			} 
+			catch (IOException e) {
+			} 
+			catch(NullPointerException e){
+
 			}
 		}
 	}
 	
 	private void processMessageEncryption(String message){
 		//encryption of message that returns key
-		//TO DO: ENCRYPTION
-		//displayMessage("ME: " + message +"\n");
-
-		//byte[] messageByte = cryption.encrypt(message);
-		
+		displayMessage("Encrypting message: " + message +"\n");
 		//send encrypted message
-		sendMessage(message);
-	}
-	
-	private void sendMessage(String message){
-		try {
-			output.writeObject(message);
+		
+		try{
+			byte[] messageByte = cryption.encrypt(message);
+			displayMessage("ME (encrypted): " + messageByte.toString() + "\n\n");
+			output.writeObject(cryption.encrypt(message));
 			output.flush();
-			//System.out.print("send to server successful");
-		} catch (Exception e) {
-			displayMessage("");
-			System.out.print("send unsuccessful\nerror: " + e);
-			
-			//e.printStackTrace();
 		}
+		catch(Exception e){
+			
+		}
+		
 	}
 	
 	// process messsage recieved by client
-	private void processMessageDecryption(String message){
+	private void processMessageDecryption(byte[] messageByte){
 		// decryption of key that returns message
-		// TO DO: DECRYPTION
-		
-		//display decrypted message
-		displayMessage(message + "\n");
+		displayMessage("decrypting message: " + messageByte.toString() + "\n");
+		displayMessage("OTHER CLIENT (decrypted): " + cryption.decrypt(messageByte) + "\n\n");
 	}
 	
 	/**
@@ -198,12 +171,15 @@ public class Client extends JFrame implements Runnable{
 	
 	private class MyKeyListener implements KeyListener {
 		private boolean listening = true;
+		/* possibly use to prevent client from sending messages before other client connects
+		 * but it still sends the messages as soon as they connect which isn't the worst option
 		public void activate(){
 			listening = true;
 		}
 		public void deactivate(){
 			listening = false;
 		}
+		*/
 		@Override
 		public void keyPressed(KeyEvent e) {
 			if(listening){
