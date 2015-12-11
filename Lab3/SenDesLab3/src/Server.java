@@ -4,6 +4,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.PublicKey;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
@@ -19,14 +20,16 @@ public class Server extends JFrame{
 	private static final long serialVersionUID = 1226255923201518073L;
 	private JTextArea textDisplayArea; // output the flow of messages from one user to the other
 	private User[] users; // array of Users
-	private int currentUser;
+	//private int currentUser;
 	private final static int USER_A = 0; // constant for the first user
-	private final static int USER_B = 1; // constant for the second user
+	//private final static int USER_B = 1; // constant for the second user
 	private final int PORT = 23557;
 	private ServerSocket server; // server socket to connect with clients
 	private ExecutorService runMessenger; // will run Users
 	private Lock messengerLock; // to lock game for synchronization
 	private Condition otherUserConnected; // to wait for other user's turn
+	boolean keyPresent = false;
+	PublicKey user0publicKey;
 	
 	public Server(){
 		super("Messaging Server");
@@ -36,7 +39,7 @@ public class Server extends JFrame{
 		otherUserConnected = messengerLock.newCondition();  // condition variable for both clients being connected
 
 		users = new User[2];
-		currentUser = USER_A;
+		//currentUser = USER_A;
 	
 		// create GUI
 		textDisplayArea = new JTextArea();
@@ -49,7 +52,7 @@ public class Server extends JFrame{
 		try{
 			server = new ServerSocket(PORT, 2);
 			displayMessage("Server awaiting connections\n");
-			System.out.print("Server waiting connections\n");
+			//System.out.print("Server waiting connections\n");
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -66,8 +69,6 @@ public class Server extends JFrame{
 
 			try{// wait for connection, create Client, start Runnable
 				users[i] = new User(server.accept(), i);
-				//displayMessage("User " + i + " connected \n");
-				//System.out.println("User " + i + " connected \n");
 				runMessenger.execute(users[i]);		// execute player runnable
 			}
 			catch(IOException ioException){
@@ -107,8 +108,6 @@ public class Server extends JFrame{
 		
 		// set up User thread
 		public User(Socket socket, int number){
-			//displayMessage("User " + number + " instantiated\n");
-			//System.out.print("User " + number + " instantiated\n");
 			userNumber = number; // store this user's number
 			connection = socket; // store socket for client
 			
@@ -119,22 +118,21 @@ public class Server extends JFrame{
 			} catch (Exception e) {
 				//e.printStackTrace();
 				//System.exit(1);
-				//System.err.println("\nError at connect streams: " + e + "\n");
+				System.err.println("\nError at connect streams: " + e + "\n");
 			}
 		}		
 
 		// control thread's execution
 		@Override
 		public void run() {
-			//displayMessage("Enter run() for User " + userNumber + "\n");
-			//System.out.println("Enter run() for User " + userNumber);
 			try{
-				//displayMessage("User " + userNumber + " connected\n");
 			
 				// if user A, wait for another user to arrive
 				if(userNumber == USER_A){
 					output.writeObject("SEVER: Connected: waiting for another User\n");
 					output.flush(); // flush output
+					//output.writeBoolean(false); //send boolean to tell client to not use keyListener yet
+					//output.flush();
 					
 					messengerLock.lock(); // lock messenger to wait for second user
 					
@@ -147,6 +145,24 @@ public class Server extends JFrame{
 						e.printStackTrace();
 					}
 					finally{
+						//before locking game, wait for pub key to be sent in
+						displayMessage("attempting to read user 0 key...\n");
+						keyPresent = false;
+						while(!keyPresent){
+							try {
+								Object ob = input.readObject();
+								if(ob instanceof PublicKey){
+									displayMessage("Got user 0's Key: " + ob.toString()+"\n");
+									keyPresent = true;
+									users[1].output.writeObject(ob);
+									users[1].output.flush();
+								}
+							} catch (ClassNotFoundException e) {
+								displayMessage("scrimp");
+								e.printStackTrace();
+							}
+						}
+						
 						messengerLock.unlock(); // unlock messenger after second user
 					}
 					
@@ -157,13 +173,35 @@ public class Server extends JFrame{
 				else{
 					output.writeObject("SERVER: both users connected: begin convo\n");
 					output.flush();
-				}
+					
+					keyPresent=false;
+					while(!keyPresent){
+						try{
+							Object ob = input.readObject();
+							if(ob instanceof PublicKey){
+								//displayMessage("got user 1's Key: " + ob.toString() + "\n");
+								keyPresent = true;
+								users[0].output.writeObject(ob);
+								users[0].output.flush();
+							}
+						}
+						catch(ClassNotFoundException e){
+							
+						}
+					}
+				}				
 				
 				// while messenger application is still running
 				while(true){
 					try{
+						//if(input.available() != 0){
 						Object ob = input.readObject();
-						if(ob.getClass().equals(String.class)){
+						if(ob.getClass().equals(PublicKey.class)){
+							System.out.print("fuck ya");
+							//PublicKey key = (PublicKey)ob;
+							//displayMessage("User " + userNumber + " sent their public key: " + key);
+						}
+						else if(ob.getClass().equals(String.class)){
 							String mesg = ((String) ob).toString();
 							//System.out.print("User " + userNumber + ":" + mesg +"\n");
 							displayMessage("User " + userNumber + ":" + mesg +"\n");
@@ -176,6 +214,7 @@ public class Server extends JFrame{
 								users[0].output.flush();
 							}
 						}
+					//}
 					}
 					catch(ClassNotFoundException e){
 					//	e.printStackTrace();
